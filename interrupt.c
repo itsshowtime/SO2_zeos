@@ -85,5 +85,6 @@ void setIdt()
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
 
   set_idt_reg(&idtR);
+  setInterruptHandler(33, keyboard_handler, 0);
 }
 

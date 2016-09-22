@@ -102,7 +102,6 @@ int __attribute__((__section__(".text.main")))
   printk("Entering user mode...");
 
   enable_int();
-  setInterruptHandler(33, keyboard_handler, 0);
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges
    * and going to execute 'magically' at 'usr_main'...
