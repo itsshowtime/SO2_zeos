@@ -29,6 +29,16 @@ char char_map[] =
   '\0','\0'
 };
 
+/********************
+  * Service Routines *
+ ********************/
+void keyboard_routine()
+{
+  unsigned char c = inb(0x60);
+  if(c&0x80) printc_xy(0,0,char_map[c&0x7f]);
+}
+
+
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
   /***********************************************************************/
@@ -73,6 +83,7 @@ void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
   idt[vector].highOffset      = highWord((DWord)handler);
 }
 
+void keyboard_handler();
 
 void setIdt()
 {
@@ -83,8 +94,8 @@ void setIdt()
   set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+  setInterruptHandler(33, keyboard_handler, 0);
 
   set_idt_reg(&idtR);
-  setInterruptHandler(33, keyboard_handler, 0);
 }
 
