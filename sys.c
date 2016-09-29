@@ -13,6 +13,8 @@
 
 #include <sched.h>
 
+#include <errno.h>
+
 #define LECTURA 0
 #define ESCRIPTURA 1
 
@@ -25,7 +27,7 @@ int check_fd(int fd, int permissions)
 
 int sys_ni_syscall()
 {
-	return -38; /*ENOSYS*/
+	return -ENOSYS;
 }
 
 int sys_getpid()
@@ -42,25 +44,28 @@ int sys_fork()
   return PID;
 }
 
-int sys_write(int fd, char * buffer, int size)
+int sys_write(int fd, char *buffer, int size)
 {
-  int ret;
+  //check fd
+  int ret = check_fd(fd,ESCRIPTURA);  
+  if(ret) return ret;
+  //check buffer
+  if(buffer == NULL) return -EFAULT;
   
-  if((ret = check_fd(fd,ESCRIPTURA))) return ret;
-  if(buffer != NULL)
-  {
-    if(size <= 0)
+  //check size
+  if(size < 0)
     {
-      ret = sys_write_console(buffer, size);
-      return ret;
+      return -EINVAL;
     }
-  }
-
-
+  
+  //write
+  ret = sys_write_console(buffer, size);
+  return ret;
 }
 
 int sys_gettime()
 {
+  return zeos_ticks;
 }
 
 void sys_exit()

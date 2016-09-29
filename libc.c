@@ -43,3 +43,43 @@ int strlen(char *a)
   return i;
 }
 
+void perror()
+{
+  char errstring[256];
+  itoa(errno, errstring);
+  write(1,errstring,strlen(errstring));
+}
+
+int write(int fd, char *buffer, int size)
+{
+  int ret;
+
+  asm
+  (
+    "int $0x80\n\t"
+    : "=a" (ret)
+    : "a" (0x04), "b" (fd), "c" (buffer), "d" (size)
+
+  );
+
+  if(ret < 0)
+  {
+  ret = -ret;
+  return -1;
+  }
+
+  return ret;
+}
+
+int gettime()
+{
+  int ret;
+  asm
+  (
+    "int $0x80\n\t"
+    : "=a" (ret)
+    : "a" (0x0A)
+  );
+
+  return ret;
+}
