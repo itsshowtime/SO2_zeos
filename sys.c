@@ -42,6 +42,15 @@ int sys_fork()
   return PID;
 }
 
+int sys_write(int fd, char * buffer, int size)
+{
+
+
+
+
+}
+
 void sys_exit()
 {  
 }
+

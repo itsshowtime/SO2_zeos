@@ -29,15 +29,28 @@ char char_map[] =
   '\0','\0'
 };
 
-/********************
+/*********************
   * Service Routines *
- ********************/
+ *********************/
 void keyboard_routine()
 {
   unsigned char c = inb(0x60);
-  if(c&0x80) printc_xy(0,0,char_map[c&0x7f]);
+  if(c&0x80) {
+    if(char_map[c&0x7f] != '\0')
+       { 
+       printc_xy(0,0,char_map[c&0x7f]);
+       }
+    else printc_xy(0,0,'C');
+  }
 }
 
+void clock_routine()
+{
+  zeos_show_clock();
+}
+
+/********************
+*/
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
@@ -83,7 +96,6 @@ void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
   idt[vector].highOffset      = highWord((DWord)handler);
 }
 
-void keyboard_handler();
 
 void setIdt()
 {
@@ -95,7 +107,8 @@ void setIdt()
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(33, keyboard_handler, 0);
-
+  setInterruptHandler(32, clock_handler, 0);
+  setTrapHandler(0x80, system_call_handler, 3);
   set_idt_reg(&idtR);
 }
 
