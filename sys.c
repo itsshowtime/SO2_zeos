@@ -20,8 +20,8 @@
 
 int check_fd(int fd, int permissions)
 {
-  if (fd!=1) return -9; /*EBADF*/
-  if (permissions!=ESCRIPTURA) return -13; /*EACCES*/
+  if (fd!=1) return -EBADF; 
+  if (permissions!=ESCRIPTURA) return -EACCES; 
   return 0;
 }
 
@@ -50,12 +50,12 @@ int sys_write(int fd, char *buffer, int size)
   int ret = check_fd(fd,ESCRIPTURA);  
   if(ret) return ret;
   //check buffer
-  if(buffer == NULL) return -EFAULT;
+  if(buffer == NULL) return -EFAULT; 
   
   //check size
   if(size < 0)
     {
-      return -EINVAL;
+      return -EINVAL; 
     }
   
   //write

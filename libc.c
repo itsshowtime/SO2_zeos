@@ -64,7 +64,7 @@ int write(int fd, char *buffer, int size)
 
   if(ret < 0)
   {
-  ret = -ret;
+  errno = -ret;
   return -1;
   }
 
