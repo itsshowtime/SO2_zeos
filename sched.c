@@ -15,7 +15,7 @@ union task_union protected_tasks[NR_TASKS+2]
 
 union task_union *task = &protected_tasks[1]; /* == union task_union task[NR_TASKS] */
 
-#if 0
+#if 1
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
   return list_entry( l, struct task_struct, list);
@@ -61,7 +61,7 @@ void cpu_idle(void)
 	}
 }
 
-void init_idle (void)
+void init_idle (void) // task 0
 {
 
 }
@@ -72,6 +72,11 @@ void init_task1(void)
 
 
 void init_sched(){
+
+INIT_LIST_HEAD(&freequeue);
+
+
+INIT_LIST_HEAD(&readyqueue);
 
 }
 
