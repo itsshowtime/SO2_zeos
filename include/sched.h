@@ -23,6 +23,8 @@ struct task_struct {
 union task_union {
   struct task_struct task;
   unsigned long stack[KERNEL_STACK_SIZE];    /* pila de sistema, per procés */
+  // Added fields
+  int ebp_esp_reg;
 };
 
 extern union task_union protected_tasks[NR_TASKS+2];

@@ -1,7 +1,7 @@
 /*
  * sched.c - initializes struct for task 0 anda task 1
  */
-
+i
 #include <sched.h>
 #include <mm.h>
 #include <io.h>
@@ -26,6 +26,8 @@ extern struct list_head blocked;
 
 struct list_head freequeue;  // queue of the available PCBs
 struct list_head readyqueue; // queue of candidates to use CPU
+
+struct task_struct *idle_task; //4.4.1 5)
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -63,13 +65,75 @@ void cpu_idle(void)
 
 void init_idle (void) // task 0
 {
+  // Get an available task_union from the freequeue to contain the characteristics of this process
+  struct list_head *fproc = list_first(&freequeue);
+  //4.4.1 6)
+  idle_task = list_head_to_task_struct(fproc);
+  list_del(fproc);
 
+  //Assign PID 0 to the process
+  idle_task -> PID = 0;
+  
+  allocate_DIR(idle_task);
+ 
+  //4) 6.1) 6.2) 6.3) 
+  union task_union *utask = (union task_union*) idle_task;
+  utask -> stack[KERNEL_STACK_SIZE-1] = (unsigned long)&cpu_idle;
+  utask -> stack[KERNEL_STACK_SIZE-2] = 0;
+  idle_task -> ebp_esp_reg = (unsigned long *)&(utask->stack[KERNEL_STACK_SIZE-2]);  
 }
 
 void init_task1(void)
 {
+  // Get the init process
+  struct list_head *fproc = list_first(&freequeue);
+  struct task_struct *iproc = list_head_to_task_struct(fproc);
+  list_del(fproc);
+  
+  // Assign PID 1
+  iproc -> PID = 1;
+  // 2) 3)
+  allocate_DIR(iproc);
+  set_user_pages(iproc);
+ 
+  // 4) 5) 
+  tss.esp0 = KERNEL_ESP((union task_union*)iproc);
+  set_cr3(get_DIR(iproc));  
+
 }
 
+void inner_task_switch(union task_union *new){
+
+  page_table_entry *new_DIR = get_DIR(&new -> task)
+  // Update the TSS to make it point to the new_task system stack
+  tss.esp0 = KERNEL_ESP(new);
+  // Change the user address space by updating the current page directory
+  set_cr3(new_DIR);
+  // Stores the current ebp, restores the new esp (new process), restores ebp from the stack, return 
+  __asm__ __volatile__ (
+        "mov %%ebp,%0\n"
+        "movl %1, %%esp\n"
+        "popl %%ebp\n"
+        "ret\n"
+        : "=g" (current()->ebp_esp_reg)
+        : "r"  (t->task.kernel_esp)
+	);
+}
+
+void task_switch(union task_union *new){
+//new =  pointer to the task_union of the process that will be executed
+   __asm__ __volatile__ (
+  	"pushl %esi\n\t"
+	"pushl %edi\n\t"
+	"pushl %ebx\n\t"
+	);
+  inner_task_switch(new);
+  __asm__ __volatile__ (
+  	"popl %ebx\n\t"
+	"popl %edi\n\t"
+	"popl %esi\n\t"
+	);
+}
 
 void init_sched(){
 
