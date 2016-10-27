@@ -104,7 +104,7 @@ void init_task1(void)
 
 void inner_task_switch(union task_union *new){
 
-  page_table_entry *new_DIR = get_DIR(&new -> task)
+  page_table_entry *new_DIR = get_DIR(&new -> task);
   // Update the TSS to make it point to the new_task system stack
   tss.esp0 = KERNEL_ESP(new);
   // Change the user address space by updating the current page directory
@@ -116,7 +116,7 @@ void inner_task_switch(union task_union *new){
         "popl %%ebp\n"
         "ret\n"
         : "=g" (current()->ebp_esp_reg)
-        : "r"  (t->task.kernel_esp)
+        : "r"  (new->task.ebp_esp_reg)
 	);
 }
 
@@ -139,7 +139,7 @@ void init_sched(){
 
   INIT_LIST_HEAD(&freequeue);
   int i = 0;
-  for(i; i < NR_TASKS; ++i) // NR_TASKS+1 ????
+  for(i = 0; i < NR_TASKS; ++i) // NR_TASKS+1 ????
   {
     task[i].task.PID=-1;
     list_add_tail(&(task[i].task.list), &freequeue);
