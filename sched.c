@@ -109,7 +109,7 @@ void inner_task_switch(union task_union *new){
   tss.esp0 = KERNEL_ESP(new);
   // Change the user address space by updating the current page directory
   set_cr3(new_DIR);
-  // Stores the current ebp, restores the new esp (new process), restores ebp from the stack, return 
+  // Stores the current ebp, restores esp in the new PCB, restores ebp from the stack, return 
   __asm__ __volatile__ (
         "mov %%ebp,%0\n"
         "movl %1, %%esp\n"

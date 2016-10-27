@@ -83,3 +83,35 @@ int gettime()
 
   return ret;
 }
+
+int getpid(void)
+{
+  int ret;
+  asm
+  (
+    "int $0x80\n\t"
+    : "=a" (ret)
+    : "a" (0x14)
+  );  
+
+  return ret;
+}
+
+int fork(void)
+{
+  int ret;
+  asm
+  (
+    "int $0x80\n\t"
+    : "=a" (ret)
+    : "a" (0x02)
+  );
+
+  if(ret < 0)
+  {
+  errno = -ret;
+  return -1;
+  }
+
+  return ret;
+}
