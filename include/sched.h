@@ -8,18 +8,23 @@
 #include <list.h>
 #include <types.h>
 #include <mm_address.h>
+#include <stats.h>
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
+extern int gPID;
 
 struct task_struct {
-  int PID;			/* Process ID. This MUST be the first field of the struct. */
+  int PID;	        // Process ID. This MUST be the first field of the struct.
   page_table_entry * dir_pages_baseAddr;
   struct list_head list;
   //Added fields
-  int ebp_esp_reg;
+  int ebp_esp_reg;      // Stack Pointer,used for task switch,fork... esp/ebp magic
+  enum state_t state;   // State of the proc.
+  int total_quantum;    // Total quantum of the proc.
+  struct stats p_stats; // Stats of the proc.
 };
 
 union task_union {

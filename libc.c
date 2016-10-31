@@ -115,3 +115,33 @@ int fork(void)
 
   return ret;
 }
+
+int get_stats(int pid, struct stats *st)
+{
+  int ret;
+
+  asm
+  (
+    "int $0x80\n"
+    : "=a" (ret)
+    : "a" (0x23) //35 in decimal
+  );
+  if(ret<0)
+  {
+    errno = -ret;
+    return -1;
+  }
+  errno = 0;
+  return ret;
+
+}
+
+void exit(void)
+{
+  asm
+  (
+    "int $0x80\n"
+    :
+    : "a" (0x01)
+  );
+}

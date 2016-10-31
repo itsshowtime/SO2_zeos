@@ -37,7 +37,6 @@ int __attribute__ ((__section__(".text.main")))
 //  count = 75;
 //  acum = 0;
 //  acum = outer(count);
-  runjp();
   while(1);
   return 0;
 }
