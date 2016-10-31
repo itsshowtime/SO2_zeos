@@ -25,8 +25,6 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 
 extern struct list_head blocked;
 
-int gPID=1; // Global PID
-
 #define DEF_QUANTUM 10 // Default quantum
 int quantum_left = 0;
 
@@ -34,6 +32,18 @@ struct list_head freequeue;  // queue of the available PCBs
 struct list_head readyqueue; // queue of candidates to use CPU
 
 struct task_struct *idle_task=NULL; //4.4.1 5)
+
+void init_stats(struct stats *s)
+{
+	s->user_ticks = 0;
+	s->system_ticks = 0;
+	s->blocked_ticks = 0;
+	s->ready_ticks = 0;
+	s->elapsed_total_ticks = get_ticks();
+	s->total_trans = 0;
+	if(get_ticks()>=0) s->remaining_ticks = get_ticks();
+        else s->remaining_ticks = 0;
+}
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -79,7 +89,9 @@ void init_idle (void) // task 0
 
   //Assign PID 0 to the process
   idle_task -> PID = 0;
-  
+ 
+  init_stats(&idle_task->p_stats);
+ 
   allocate_DIR(idle_task);
  
   //4) 6.1) 6.2) 6.3) 
@@ -98,6 +110,9 @@ void init_task1(void)
   
   // Assign PID 1
   iproc -> PID = 1;
+  
+  init_stats(&iproc->p_stats);
+
   // 2) 3)
   allocate_DIR(iproc);
   set_user_pages(iproc);
@@ -177,7 +192,7 @@ void set_quantum(struct task_struct *t, int new_quantum)
 
 void update_sched_data_rr(void)
 {
-  quantum_left--;
+  if(quantum_left>0)quantum_left--;
 }
 
 int needs_sched_rr(void)

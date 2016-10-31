@@ -101,7 +101,8 @@ int __attribute__((__section__(".text.main")))
   printk("Entering user mode...");
 
   zeos_ticks = 0;
-
+  
+  zeos_init_auxjp();
   enable_int();
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges

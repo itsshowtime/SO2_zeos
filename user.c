@@ -37,6 +37,13 @@ int __attribute__ ((__section__(".text.main")))
 //  count = 75;
 //  acum = 0;
 //  acum = outer(count);
+//runjp_rank(int first, int last);
+  runjp_rank(0,2);
+  runjp_rank(7,7);
+  runjp_rank(18,19);
+  runjp_rank(23,24);
+  runjp_rank(28,30);
+// 11 de 32 tests OK 
   while(1);
   return 0;
 }

@@ -124,7 +124,7 @@ int get_stats(int pid, struct stats *st)
   (
     "int $0x80\n"
     : "=a" (ret)
-    : "a" (0x23) //35 in decimal
+    : "a" (0x23), "b" (pid), "c" (st) // 0d35 == 0x23
   );
   if(ret<0)
   {
