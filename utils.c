@@ -3,8 +3,6 @@
 
 #include <mm_address.h>
 
-int zeos_ticks;
-
 void copy_data(void *start, void *dest, int size)
 {
   DWord *p = start, *q = dest;
@@ -130,4 +128,16 @@ unsigned long get_ticks(void) {
         do_div(ticks,CYCLESPERTICK);
 
         return ticks;
+}
+
+void memset(void *s, unsigned char c, int size)
+{
+  unsigned char *m=(unsigned char *)s;
+  
+  int i;
+  
+  for (i=0; i<size; i++)
+  {
+    m[i]=c;
+  }
 }
