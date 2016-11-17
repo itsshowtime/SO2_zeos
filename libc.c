@@ -110,6 +110,22 @@ int fork()
   return result;
 }
 
+int clone(void (*function)(void), void *stack){
+  int result;
+
+  __asm__ __volatile__ (
+        "int $0x80\n\t"
+        :"=a" (result)
+        :"a" (19) );
+  if (result<0)
+  {
+    errno = -result;
+    return -1;
+  }
+  errno=0;
+  return result;
+}
+
 void exit(void)
 {
   __asm__ __volatile__ (

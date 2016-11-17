@@ -151,6 +151,8 @@ int sys_fork(void)
   return uchild->task.PID;
 }
 
+int sys_clone(void (*function)(void), void *stack){}
+
 #define TAM_BUFFER 512
 
 int sys_write(int fd, char *buffer, int nbytes) {
