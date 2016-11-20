@@ -11,8 +11,10 @@
 #include <stats.h>
 
 
-#define NR_TASKS      10
+#define NR_TASKS		10
 #define KERNEL_STACK_SIZE	1024
+
+#define NR_SEM			20
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
@@ -31,10 +33,16 @@ union task_union {
   unsigned long stack[KERNEL_STACK_SIZE];    /* pila de sistema, per procés */
 };
 
+struct semaphore{
+  int own_PID;	// owner PID
+  int counter;
+  struct list_head blockedqueue;
+};
+
 extern union task_union protected_tasks[NR_TASKS+2];
 extern union task_union *task; /* Vector de tasques */
 extern struct task_struct *idle_task;
-
+extern struct semaphore semaphores[NR_SEM];
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 

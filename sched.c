@@ -34,6 +34,8 @@ struct list_head freequeue;
 // Ready queue
 struct list_head readyqueue;
 
+struct semaphore semaphores[NR_SEM];
+
 void init_stats(struct stats *s)
 {
 	s->user_ticks = 0;
@@ -226,6 +228,12 @@ void init_freequeue()
 void init_sched()
 {
   init_freequeue();
+  
+  int i;
+  for(i = 0; i < NR_SEM; ++i){
+    semaphores[i].own_PID = -1;
+  }
+
   INIT_LIST_HEAD(&readyqueue);
 }
 
