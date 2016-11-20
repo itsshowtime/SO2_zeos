@@ -18,6 +18,7 @@ Register    gdtR;
 
 /* PAGING */
 /* Variables containing the page directory and the page table */
+int dir_pages_ref[NR_TASKS];
   
 page_table_entry dir_pages[NR_TASKS][TOTAL_PAGES]
   __attribute__((__section__(".data.task")));
