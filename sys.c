@@ -152,17 +152,13 @@ int sys_fork(void)
 }
 
 int sys_clone(void (*function)(void), void *stack){
-
   struct list_head *lhcurrent = NULL;
   union task_union *uchild;
 
   /* Any free task_struct? */
   if (list_empty(&freequeue)) return -ENOMEM;
-
   lhcurrent=list_first(&freequeue);
-
   list_del(lhcurrent);
-
   uchild=(union task_union*)list_head_to_task_struct(lhcurrent);
 
   /* Copy the parent's task struct to child's */
@@ -175,18 +171,17 @@ int sys_clone(void (*function)(void), void *stack){
 
   uchild->task.PID=++global_PID;
   uchild->task.state=ST_READY;
-
-  int register_ebp;             /* frame pointer */
+  
   /* Map Parent's ebp to child's stack */
+  int register_ebp;             /* frame pointer */
   __asm__ __volatile__ (
     "movl %%ebp, %0\n\t"
       : "=g" (register_ebp)
       : );
   register_ebp=(register_ebp - (int)current()) + (int)(uchild);
-
   uchild->task.register_esp=register_ebp + sizeof(DWord);
-
   DWord temp_ebp=*(DWord*)register_ebp;
+  
   /* Prepare child stack for context switch */
   uchild->task.register_esp-=sizeof(DWord);
   *(DWord*)(uchild->task.register_esp)=(DWord)&ret_from_fork;

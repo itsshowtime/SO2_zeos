@@ -15,7 +15,7 @@
 /* Bytemap to mark the free physical pages */
 extern Byte phys_mem[TOTAL_PAGES];
 
-
+extern int dir_pages_ref[NR_TASKS];
 extern page_table_entry dir_pages[NR_TASKS][TOTAL_PAGES];
 
 int init_frames( void );
