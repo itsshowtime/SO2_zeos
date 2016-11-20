@@ -198,20 +198,32 @@ int sys_clone(void (*function)(void), void *stack){
 }
 
 int sys_sem_init(int n_sem, unsigned int value){
+<<<<<<< HEAD
   user_to_system();
   if(n_sem < 0 || n_sem > NR_SEM) return -EINVAL;
   if(semaphores[n_sem].own_PID != -1) return -EBUSY;
+=======
+  if(n_sem < 0 || n_sem > NR_SEM) return -EINVAL;
+//  if(semaphores[n_sem].own_PID != -1) return -EBUSY;
+>>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
 
   semaphores[n_sem].own_PID = current()->PID;
   semaphores[n_sem].counter = value;
   INIT_LIST_HEAD(&semaphores[n_sem].blockedqueue);
 
+<<<<<<< HEAD
   system_to_user();
+=======
+>>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
   return 0;
 }
 
 int sys_sem_wait(int n_sem){
+<<<<<<< HEAD
   if(n_sem < 0 || n_sem > NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
+=======
+  if(n_sem < 0 || n_sem > NR_SEM /*|| semaphores[n_sem].own_PID == -1*/) return -EINVAL;
+>>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
 
   if(semaphores[n_sem].counter > 0) --semaphores[n_sem].counter;
   else {
@@ -229,7 +241,11 @@ int sys_sem_wait(int n_sem){
 }
 
 int sys_sem_signal(int n_sem){
+<<<<<<< HEAD
   if(n_sem < 0 || n_sem > NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
+=======
+  if(n_sem < 0 || n_sem > NR_SEM) return -EINVAL;
+>>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
   
   if(list_empty(&semaphores[n_sem].blockedqueue)) ++semaphores[n_sem].counter;
   else {
@@ -244,7 +260,11 @@ int sys_sem_signal(int n_sem){
 }
 
 int sys_sem_destroy(int n_sem){
+<<<<<<< HEAD
   if(n_sem > 0 || n_sem > NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
+=======
+  if(n_sem > 0 || n_sem > NR_SEM) return -EINVAL;
+>>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
   if(semaphores[n_sem].own_PID != current()->PID) return -EPERM;
 
   while(!list_empty(&semaphores[n_sem].blockedqueue)){
