@@ -218,8 +218,16 @@ int sys_sem_wait(int n_sem){
 
   if(semaphores[n_sem].counter > 0) --semaphores[n_sem].counter;
   else {
+    /****** "Funciona" libjpclone  ******/
+    //struct list_head *lh_sem = &(current()->list);
+    //list_del(list_first(&readyqueue));
+    //list_add_tail(lh_sem, &semaphores[n_sem].blockedqueue);
+    //current()->state = ST_BLOCKED;
+
+    /****** Funcione libjpsemaphores  ******/
     update_process_state_rr(current(), &semaphores[n_sem].blockedqueue);
     sched_next_rr();
+
 
     if(semaphores[n_sem].own_PID == -1) return -EPERM;
   } 
