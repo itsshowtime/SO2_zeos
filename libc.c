@@ -116,7 +116,7 @@ int clone(void (*function)(void), void *stack){
   __asm__ __volatile__ (
         "int $0x80\n\t"
         :"=a" (res)
-        :"a" (19) );
+        :"a" (19), "b" (function), "c"(stack));
   if (res<0)
   {
     errno = -res;
@@ -132,7 +132,7 @@ int sem_init(int n_sem, unsigned int value){
   __asm__ __volatile__ (
         "int $0x80\n\t"
         :"=a" (res)
-        :"a" (21) );
+        :"a" (21), "b" (n_sem), "c" (value));
   if (res<0)
   {
     errno = -res;
@@ -148,7 +148,7 @@ int sem_wait(int n_sem){
   __asm__ __volatile__ (
         "int $0x80\n\t"
         :"=a" (res)
-        :"a" (22) );
+        :"a" (22), "b" (n_sem));
   if (res<0)
   {
     errno = -res;
@@ -164,7 +164,7 @@ int sem_signal(int n_sem){
   __asm__ __volatile__ (
         "int $0x80\n\t"
         :"=a" (res)
-        :"a" (23) );
+        :"a" (23), "b" (n_sem));
   if (res<0)
   {
     errno = -res;
@@ -180,71 +180,7 @@ int sem_destroy(int n_sem){
   __asm__ __volatile__ (
         "int $0x80\n\t"
         :"=a" (res)
-        :"a" (24) );
-  if (res<0)
-  {
-    errno = -res;
-    return -1;
-  }
-  errno=0;
-  return res;
-}
-
-int sem_init(int n_sem, unsigned int value){
-  int res;
-
-  __asm__ __volatile__ (
-        "int $0x80\n\t"
-        :"=a" (res)
-        :"a" (21) );
-  if (res<0)
-  {
-    errno = -res;
-    return -1;
-  }
-  errno=0;
-  return res;
-}
-
-int sem_wait(int n_sem){
-  int res;
-
-  __asm__ __volatile__ (
-        "int $0x80\n\t"
-        :"=a" (res)
-        :"a" (22) );
-  if (res<0)
-  {
-    errno = -res;
-    return -1;
-  }
-  errno=0;
-  return res;
-}
-
-int sem_signal(int n_sem){
-  int res;
-
-  __asm__ __volatile__ (
-        "int $0x80\n\t"
-        :"=a" (res)
-        :"a" (23) );
-  if (res<0)
-  {
-    errno = -res;
-    return -1;
-  }
-  errno=0;
-  return res;
-}
-
-int sem_destroy(int n_sem){
-  int res;
-
-  __asm__ __volatile__ (
-        "int $0x80\n\t"
-        :"=a" (res)
-        :"a" (24) );
+        :"a" (24), "b" (n_sem));
   if (res<0)
   {
     errno = -res;

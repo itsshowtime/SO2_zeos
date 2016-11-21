@@ -155,7 +155,7 @@ int sys_clone(void (*function)(void), void *stack){
   struct list_head *lhcurrent = NULL;
   union task_union *uchild;
 
-  if(!access_ok(VERIFY_READ, function, 3) || !access_ok(VERIFY_WRITE, stack, 3)) return -EFAULT;
+  if(!access_ok(VERIFY_WRITE, function, sizeof(function)) || !access_ok(VERIFY_WRITE, stack, sizeof(stack))) return -EFAULT;
   /* Any free task_struct? */
   if (list_empty(&freequeue)) return -ENOMEM;
   lhcurrent=list_first(&freequeue);
@@ -167,6 +167,10 @@ int sys_clone(void (*function)(void), void *stack){
 
   /* new pages dir */
   allocate_DIR((struct task_struct*)uchild);
+
+  struct task_struct *tchild = list_entry(lhcurrent, struct task_struct, list);  
+  int pos = ((unsigned int)tchild->dir_pages_baseAddr - (unsigned int)dir_pages)/sizeof(dir_pages[NR_TASKS]);
+  dir_pages_ref[pos]++;
 
   uchild->task.PID=++global_PID;
   uchild->task.state=ST_READY;
@@ -198,36 +202,24 @@ int sys_clone(void (*function)(void), void *stack){
 }
 
 int sys_sem_init(int n_sem, unsigned int value){
-<<<<<<< HEAD
   user_to_system();
-  if(n_sem < 0 || n_sem > NR_SEM) return -EINVAL;
+  
+  if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
   if(semaphores[n_sem].own_PID != -1) return -EBUSY;
-=======
-  if(n_sem < 0 || n_sem > NR_SEM) return -EINVAL;
-//  if(semaphores[n_sem].own_PID != -1) return -EBUSY;
->>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
 
   semaphores[n_sem].own_PID = current()->PID;
   semaphores[n_sem].counter = value;
   INIT_LIST_HEAD(&semaphores[n_sem].blockedqueue);
 
-<<<<<<< HEAD
   system_to_user();
-=======
->>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
   return 0;
 }
 
 int sys_sem_wait(int n_sem){
-<<<<<<< HEAD
-  if(n_sem < 0 || n_sem > NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
-=======
-  if(n_sem < 0 || n_sem > NR_SEM /*|| semaphores[n_sem].own_PID == -1*/) return -EINVAL;
->>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
+  if(n_sem < 0 || n_sem >= NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
 
   if(semaphores[n_sem].counter > 0) --semaphores[n_sem].counter;
   else {
-    current()->state=ST_BLOCKED;
     update_process_state_rr(current(), &semaphores[n_sem].blockedqueue);
     sched_next_rr();
 
@@ -241,11 +233,7 @@ int sys_sem_wait(int n_sem){
 }
 
 int sys_sem_signal(int n_sem){
-<<<<<<< HEAD
-  if(n_sem < 0 || n_sem > NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
-=======
-  if(n_sem < 0 || n_sem > NR_SEM) return -EINVAL;
->>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
+  if(n_sem < 0 || n_sem >= NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
   
   if(list_empty(&semaphores[n_sem].blockedqueue)) ++semaphores[n_sem].counter;
   else {
@@ -260,22 +248,20 @@ int sys_sem_signal(int n_sem){
 }
 
 int sys_sem_destroy(int n_sem){
-<<<<<<< HEAD
-  if(n_sem > 0 || n_sem > NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
-=======
-  if(n_sem > 0 || n_sem > NR_SEM) return -EINVAL;
->>>>>>> 4156ecac894729604452ba00d9603b7ba6171bf8
+  if(n_sem < 0 || n_sem >= NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
   if(semaphores[n_sem].own_PID != current()->PID) return -EPERM;
 
   while(!list_empty(&semaphores[n_sem].blockedqueue)){
     struct list_head *lh_sem = list_first(&semaphores[n_sem].blockedqueue);
     struct task_struct *ts_sem = list_head_to_task_struct(lh_sem);
 
-    ts_sem->state = ST_READY;
-    list_del(lh_sem);
-    list_add_tail(lh_sem, &readyqueue);
+    update_process_state_rr(ts_sem, &readyqueue);
+    
+    //list_del(lh_sem);
+    //list_add_tail(lh_sem, &readyqueue);
   }
-  
+  semaphores[n_sem].own_PID = -1;
+ 
   return 0;
 }
 
@@ -332,12 +318,12 @@ void sys_exit()
   /* Free task_struct */
   list_add_tail(&(current()->list), &freequeue);
   
-  current()->PID=-1;
-
   int sem;
   for(sem = 0; sem > NR_SEM; ++sem){
     if(semaphores[sem].own_PID == current()->PID) sys_sem_destroy(sem);
   }
+
+  current()->PID=-1;
  
   /* Restarts execution of the next process */
   sched_next_rr();
