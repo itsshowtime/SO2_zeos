@@ -202,7 +202,6 @@ int sys_clone(void (*function)(void), void *stack){
 }
 
 int sys_sem_init(int n_sem, unsigned int value){
-  user_to_system();
   
   if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
   if(semaphores[n_sem].own_PID != -1) return -EBUSY;
@@ -211,7 +210,6 @@ int sys_sem_init(int n_sem, unsigned int value){
   semaphores[n_sem].counter = value;
   INIT_LIST_HEAD(&semaphores[n_sem].blockedqueue);
 
-  system_to_user();
   return 0;
 }
 
@@ -223,10 +221,7 @@ int sys_sem_wait(int n_sem){
     update_process_state_rr(current(), &semaphores[n_sem].blockedqueue);
     sched_next_rr();
 
-    if(semaphores[n_sem].own_PID == -1){
-      update_process_state_rr(current(), &semaphores[n_sem].blockedqueue);
-      return -EPERM;
-    }
+    if(semaphores[n_sem].own_PID == -1) return -EPERM;
   } 
 
   return 0;
@@ -234,14 +229,14 @@ int sys_sem_wait(int n_sem){
 
 int sys_sem_signal(int n_sem){
   if(n_sem < 0 || n_sem >= NR_SEM || semaphores[n_sem].own_PID == -1) return -EINVAL;
-  
+
   if(list_empty(&semaphores[n_sem].blockedqueue)) ++semaphores[n_sem].counter;
   else {
     struct list_head *lh_sem = list_first(&semaphores[n_sem].blockedqueue);
     struct task_struct *ts_sem = list_head_to_task_struct(lh_sem);
     list_del(lh_sem);
-    ts_sem->state = ST_READY;
     list_add_tail(lh_sem, &readyqueue);    
+    ts_sem->state = ST_READY;
   }
   
   return 0;
@@ -255,10 +250,9 @@ int sys_sem_destroy(int n_sem){
     struct list_head *lh_sem = list_first(&semaphores[n_sem].blockedqueue);
     struct task_struct *ts_sem = list_head_to_task_struct(lh_sem);
 
-    update_process_state_rr(ts_sem, &readyqueue);
-    
-    //list_del(lh_sem);
-    //list_add_tail(lh_sem, &readyqueue);
+    list_del(lh_sem);
+    list_add_tail(lh_sem, &readyqueue);
+    ts_sem->state = ST_READY;
   }
   semaphores[n_sem].own_PID = -1;
  
@@ -319,7 +313,7 @@ void sys_exit()
   list_add_tail(&(current()->list), &freequeue);
   
   int sem;
-  for(sem = 0; sem > NR_SEM; ++sem){
+  for(sem = 0; sem < NR_SEM; ++sem){
     if(semaphores[sem].own_PID == current()->PID) sys_sem_destroy(sem);
   }
 
