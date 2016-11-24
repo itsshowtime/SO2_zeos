@@ -166,7 +166,7 @@ int sys_clone(void (*function)(void), void *stack){
   copy_data(current(), uchild, sizeof(union task_union));
 
   /* new pages dir */
-  allocate_DIR((struct task_struct*)uchild);
+//  allocate_DIR((struct task_struct*)uchild);
 
   struct task_struct *tchild = list_entry(lhcurrent, struct task_struct, list);  
   int pos = ((unsigned int)tchild->dir_pages_baseAddr - (unsigned int)dir_pages)/sizeof(dir_pages[NR_TASKS]);
@@ -184,7 +184,9 @@ int sys_clone(void (*function)(void), void *stack){
   register_ebp=(register_ebp - (int)current()) + (int)(uchild);
   uchild->task.register_esp=register_ebp + sizeof(DWord);
   DWord temp_ebp=*(DWord*)register_ebp;
-  
+ 
+/*Afegir function i stack a eip i esp*/
+ 
   /* Prepare child stack for context switch */
   uchild->task.register_esp-=sizeof(DWord);
   *(DWord*)(uchild->task.register_esp)=(DWord)&ret_from_fork;
@@ -311,6 +313,8 @@ void sys_exit()
   page_table_entry *process_PT = get_PT(current());
 
   // Deallocate all the propietary physical pages
+  // en el task_switch y aqui, cuando vaya a eliminar el PCB hay que comprobar que no haya threads activos
+  if()
   for (i=0; i<NUM_PAG_DATA; i++)
   {
     free_frame(get_frame(process_PT, PAG_LOG_INIT_DATA+i));

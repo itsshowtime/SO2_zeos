@@ -12,7 +12,9 @@ int __attribute__ ((__section__(".text.main")))
 
 //  Clone
   runjp();
+//  runjp_rank(0,0);
 //  Semaphores
+//  runjp();
 //  runjp_rank(0,15);
   while(1) { }
 }
