@@ -314,13 +314,15 @@ void sys_exit()
 
   // Deallocate all the propietary physical pages
   // en el task_switch y aqui, cuando vaya a eliminar el PCB hay que comprobar que no haya threads activos
-  if()
-  for (i=0; i<NUM_PAG_DATA; i++)
-  {
-    free_frame(get_frame(process_PT, PAG_LOG_INIT_DATA+i));
-    del_ss_pag(process_PT, PAG_LOG_INIT_DATA+i);
+  int pos = ((unsigned int)tchild->dir_pages_baseAddr - (unsigned int)dir_pages)/sizeof(dir_pages[NR_TASKS]);
+  dir_pages_ref[pos]--;
+  if(dir_pages_ref[pos] == 0){
+    for (i=0; i<NUM_PAG_DATA; i++)
+    {
+      free_frame(get_frame(process_PT, PAG_LOG_INIT_DATA+i));
+      del_ss_pag(process_PT, PAG_LOG_INIT_DATA+i);
+    }
   }
-  
   /* Free task_struct */
   list_add_tail(&(current()->list), &freequeue);
   

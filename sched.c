@@ -263,7 +263,7 @@ void inner_task_switch(union task_union *new)
 
   /* TLB flush. New address space */
   //if same directory no hagas set_cr3
-  set_cr3(new_DIR);
+  if (get_DIR(new) != get_DIR(current())) set_cr3(new_DIR);
 
   /* Stores current ebp */
   __asm__ __volatile__ (
