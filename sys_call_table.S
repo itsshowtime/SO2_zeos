@@ -7,7 +7,7 @@ ENTRY (sys_call_table)
 	.long sys_fork		//2 fork
 	.long sys_ni_syscall	//3
 	.long sys_write		//4 write
-	.long sys_ni_syscall	//5
+	.long sys_read		//5 read
 	.long sys_ni_syscall	//6
 	.long sys_ni_syscall	//7
 	.long sys_ni_syscall	//8

@@ -86,7 +86,7 @@ int __attribute__((__section__(".text.main")))
 
   /* Initialize Scheduling */
   init_sched();
-
+  kbuff_init();
   /* Initialize idle task  data */
   init_idle();
   /* Initialize task 1 data */

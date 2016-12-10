@@ -152,12 +152,13 @@ int sys_fork(void)
 }
 
 int sys_clone(void (*function)(void), void *stack){
-  struct list_head *lhcurrent = NULL;
-  union task_union *uchild;
-
   if(!access_ok(VERIFY_WRITE, function, sizeof(function)) || !access_ok(VERIFY_WRITE, stack, sizeof(stack))) return -EFAULT;
   /* Any free task_struct? */
   if (list_empty(&freequeue)) return -ENOMEM;
+  
+  struct list_head *lhcurrent = NULL;
+  union task_union *uchild;
+
   lhcurrent=list_first(&freequeue);
   list_del(lhcurrent);
   uchild=(union task_union*)list_head_to_task_struct(lhcurrent);
@@ -165,11 +166,8 @@ int sys_clone(void (*function)(void), void *stack){
   /* Copy the parent's task struct to child's */
   copy_data(current(), uchild, sizeof(union task_union));
 
-  /* new pages dir */
-//  allocate_DIR((struct task_struct*)uchild);
-
   struct task_struct *tchild = list_entry(lhcurrent, struct task_struct, list);  
-  int pos = ((unsigned int)tchild->dir_pages_baseAddr - (unsigned int)dir_pages)/sizeof(dir_pages[NR_TASKS]);
+  int pos = ((unsigned int)tchild->dir_pages_baseAddr - (unsigned int)dir_pages)/ (sizeof(dir_pages[NR_TASKS]) * TOTAL_PAGES);
   dir_pages_ref[pos]++;
 
   uchild->task.PID=++global_PID;
@@ -185,13 +183,15 @@ int sys_clone(void (*function)(void), void *stack){
   uchild->task.register_esp=register_ebp + sizeof(DWord);
   DWord temp_ebp=*(DWord*)register_ebp;
  
-/*Afegir function i stack a eip i esp*/
  
   /* Prepare child stack for context switch */
   uchild->task.register_esp-=sizeof(DWord);
   *(DWord*)(uchild->task.register_esp)=(DWord)&ret_from_fork;
   uchild->task.register_esp-=sizeof(DWord);
   *(DWord*)(uchild->task.register_esp)=temp_ebp;
+
+  uchild->stack[KERNEL_STACK_SIZE - 2] = (unsigned int)stack;
+  uchild->stack[KERNEL_STACK_SIZE - 5] = (unsigned int)function;
 
   /* Set stats to 0 */
   init_stats(&(uchild->task.p_stats));
@@ -298,6 +298,42 @@ int ret;
 	return (nbytes-bytes_left);
 }
 
+int sys_read_keyboard(char *buff, int count){
+  int total = 0;
+  int i;
+  while(total < count){
+    if(kbuff_getsize >= count-total){
+      for(i = 0; i < count-total; i++){
+        buff[total++] = kbuff_popchar();
+      }
+    }
+    else if(kbuff_isFull()){
+      for (i = 0; i < TAM_BUFF; i++){
+        buff[total++] = kbuff_popchar();
+      }
+    }
+    else { 
+      update_process_state_rr(current(),&keyboardqueue);
+      sched_next_rr();
+    }
+  }
+  return count;
+}
+
+int sys_read(int fd, char *buf, int count){
+  int ret;
+  
+  if(!access_ok(VERIFY_WRITE, buf, count)) return -EFAULT;
+  if(fd != 0) return -EBADF;
+  if(count < 0) return -EINVAL;
+  if(buf == NULL) return -EFAULT;
+
+ // if((ret = check_fd(fd, ESCRIPTURA))) return ret;
+
+  ret = sys_read_keyboard(buf, count);
+  
+  return ret;
+}
 
 extern int zeos_ticks;
 
@@ -314,7 +350,7 @@ void sys_exit()
 
   // Deallocate all the propietary physical pages
   // en el task_switch y aqui, cuando vaya a eliminar el PCB hay que comprobar que no haya threads activos
-  int pos = ((unsigned int)tchild->dir_pages_baseAddr - (unsigned int)dir_pages)/sizeof(dir_pages[NR_TASKS]);
+  int pos = ((unsigned int)current()->dir_pages_baseAddr - (unsigned int)dir_pages)/ (sizeof(dir_pages[NR_TASKS]) * TOTAL_PAGES);
   dir_pages_ref[pos]--;
   if(dir_pages_ref[pos] == 0){
     for (i=0; i<NUM_PAG_DATA; i++)

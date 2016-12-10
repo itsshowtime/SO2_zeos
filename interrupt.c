@@ -44,8 +44,15 @@ void clock_routine()
 void keyboard_routine()
 {
   unsigned char c = inb(0x60);
-  
   if (c&0x80) printc_xy(0, 0, char_map[c&0x7f]);
+
+  if(!(kbuff_isFull() && list_empty(&keyboardqueue))) {
+    //kbuff_pushchar(char_map[c&0x7f]);
+    kbuff_pushchar(c);
+    struct task_struct *first = list_head_to_task_struct(list_first(&keyboardqueue));
+    update_process_state_rr(first, &readyqueue);
+    sched_next_rr();
+  }
 }
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)

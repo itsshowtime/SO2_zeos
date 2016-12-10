@@ -68,6 +68,22 @@ int write(int fd, char *buffer, int size)
   errno=0;
   return result;
 }
+
+int read(int fd, char *buf, int count){
+  int result;
+
+  __asm__ __volatile__ (
+        "int $0x80\n\t"
+        : "=a" (result)
+        : "a" (5), "b" (fd), "c" (buf), "d" (count));
+  if (result<0)
+  {
+    errno = -result;
+    return -1;
+  }
+  errno=0;
+  return result;
+}
  
 int gettime()
 {
