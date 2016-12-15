@@ -46,14 +46,18 @@ void keyboard_routine()
   unsigned char c = inb(0x60);
   if (c&0x80) printc_xy(0, 0, char_map[c&0x7f]);
 
-  if(!(kbuff_isFull() && list_empty(&keyboardqueue))) {
-    //kbuff_pushchar(char_map[c&0x7f]);
-    kbuff_pushchar(c);
-    struct task_struct *first = list_head_to_task_struct(list_first(&keyboardqueue));
-    update_process_state_rr(first, &readyqueue);
-    sched_next_rr();
-  }
+    kbuff_pushchar(char_map[c&0x7f]);
+    if(!list_empty(&keyboardqueue)){
+    //fer un if per a que faci el canvi de context quan estigui el buffer ple o tingi les tecles que ha demanat (variable global o dins del proces  
+      struct task_struct *first = list_head_to_task_struct(list_first(&keyboardqueue));
+      //current ha d'anar a la readyqueue
+      //first ha d'anar al principi de la ready queue
+      update_process_state_rr(current(), &readyqueue);
+      update_process_state_rr(first, &readyqueue);
+      sched_next_rr();
+    }
 }
+
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {

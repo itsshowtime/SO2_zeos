@@ -190,6 +190,7 @@ int sys_clone(void (*function)(void), void *stack){
   uchild->task.register_esp-=sizeof(DWord);
   *(DWord*)(uchild->task.register_esp)=temp_ebp;
 
+  /* Esto es importante porque es un clone  */
   uchild->stack[KERNEL_STACK_SIZE - 2] = (unsigned int)stack;
   uchild->stack[KERNEL_STACK_SIZE - 5] = (unsigned int)function;
 
@@ -220,13 +221,6 @@ int sys_sem_wait(int n_sem){
 
   if(semaphores[n_sem].counter > 0) --semaphores[n_sem].counter;
   else {
-    /****** "Funciona" libjpclone  ******/
-    //struct list_head *lh_sem = &(current()->list);
-    //list_del(list_first(&readyqueue));
-    //list_add_tail(lh_sem, &semaphores[n_sem].blockedqueue);
-    //current()->state = ST_BLOCKED;
-
-    /****** Funcione libjpsemaphores  ******/
     update_process_state_rr(current(), &semaphores[n_sem].blockedqueue);
     sched_next_rr();
 
@@ -301,8 +295,12 @@ int ret;
 int sys_read_keyboard(char *buff, int count){
   int total = 0;
   int i;
+  if(!list_empty(&keyboardqueue)){
+      update_process_state_rr(current(),&keyboardqueue);
+      sched_next_rr(); 
+  }
   while(total < count){
-    if(kbuff_getsize >= count-total){
+    if(kbuff_getsize() >= count-total){
       for(i = 0; i < count-total; i++){
         buff[total++] = kbuff_popchar();
       }
@@ -313,6 +311,7 @@ int sys_read_keyboard(char *buff, int count){
       }
     }
     else { 
+      //current ha d'anar al principi de la keyboardqueue
       update_process_state_rr(current(),&keyboardqueue);
       sched_next_rr();
     }
@@ -327,8 +326,6 @@ int sys_read(int fd, char *buf, int count){
   if(fd != 0) return -EBADF;
   if(count < 0) return -EINVAL;
   if(buf == NULL) return -EFAULT;
-
- // if((ret = check_fd(fd, ESCRIPTURA))) return ret;
 
   ret = sys_read_keyboard(buf, count);
   
